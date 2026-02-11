@@ -37,7 +37,7 @@ def preprocess_data(df):
 def train_model(X_train,y_train):
     print("Training RandomForestRegressor model...")
     
-    model = RandomForestRegressor(n_estimators = 400,
+    model = RandomForestRegressor(n_estimators = 60,
     random_state = 0,
     n_jobs = -1)
     
