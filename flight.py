@@ -38,8 +38,8 @@ def preprocess_data(df):
 def hyper_tuning(X_train,y_train):
     print("Running hyperparameter tuning....")
     
-    model = RandomForestRegressor(random_state = 42)
     
+    model = RandomForestRegressor(random_state = 42)  
     param_dist = {
     "n_estimators" : [50,100,200],
     "max_depth":[5,10,15,20],
