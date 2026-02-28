@@ -3,15 +3,17 @@
 import pandas as pd
 import numpy as np
 import joblib
-import streamlit
+import streamlit as st
 
 from sklearn.model_selection import train_test_split,RandomizedSearchCV
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score
 
+st.title("FlightPrice Prediction using Random forest Classifier ")
 def load_file(filepath):
     st.info("Loading the dataset...")
     df = pd.read_csv(filepath)
+    df.drop('Unnamed: 0',axis=1,inplace = True)
     st.dataframe(df)
     return df
     
@@ -78,8 +80,7 @@ def save_model(model):
     st.success("Saved the model Successfully! ....")
 
     
-def main():
-    
+def main(): 
     df = load_file('data_1.csv')
     X,y = preprocess_data(df)
     X_train,X_test,y_train,y_test = train_test_split(X,y,test_size =0.2,random_state = 58)
