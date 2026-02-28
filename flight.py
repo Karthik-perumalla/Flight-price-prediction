@@ -3,18 +3,20 @@
 import pandas as pd
 import numpy as np
 import joblib
+import streamlit
 
 from sklearn.model_selection import train_test_split,RandomizedSearchCV
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score
 
 def load_file(filepath):
-    print("Loading dataset...")
+    st.info("Loading the dataset...")
     df = pd.read_csv(filepath)
+    st.dataframe(df)
     return df
     
 def preprocess_data(df):
-    print("Preprocessing the data.......")
+    st.info("Preprocessing the data.......")
     categorical_features = [
         'airline',
         'source_city',
@@ -33,10 +35,12 @@ def preprocess_data(df):
     
     X = pd.concat([encoded_df,numerical_features],axis =1)
     y = df['price']
+    st.write(X)
+    st.write(y)
     return X,y
     
 def hyper_tuning(X_train,y_train):
-    print("Running hyperparameter tuning....")
+    st.write("Running hyperparameter tuning....")
     
     model = RandomForestRegressor(n_estimators = 60,random_state = 42)
 
@@ -55,6 +59,7 @@ def hyper_tuning(X_train,y_train):
     )
     
     search.fit(X_train,y_train)
+    st.info("trained model successfully")
     
     print("Best params:",search.best_params_)
     print("Best cv score:",search.best_score_)
@@ -62,14 +67,15 @@ def hyper_tuning(X_train,y_train):
     return search.best_estimator_
     
 def evaluate_model(model,X_test,y_test):
-    print("Evaluating the model.......")
+    st.success("Evaluating the model.......")
     y_pred = model.predict(X_test)
     score = r2_score(y_test,y_pred)
-    print("test r2_score:",score)
+    st.write("test r2_score is:",score)
+    st.success("Model Evaluated Successfully")
     
 def save_model(model):
     joblib.dump(model,"flight.pkl")
-    print("Saved the model ....")
+    st.success("Saved the model Successfully! ....")
 
     
 def main():
@@ -81,4 +87,5 @@ def main():
     evaluate_model(model,X_test,y_test)
     save_model(model)
     
-main()
+if __name__ == '__main__':
+    main()
