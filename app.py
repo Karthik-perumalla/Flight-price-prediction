@@ -10,7 +10,7 @@ st.title("✈️ Flight Price Prediction using Linear Models")
 # ================= LOAD MODEL =================
 @st.cache_resource
 def load_model():
-    return joblib.load("model.pkl")
+    return joblib.load("model.joblib")
 
 model = load_model()
 st.success("Model loaded successfully!")
