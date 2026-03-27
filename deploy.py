@@ -13,7 +13,6 @@ st.title("FlightPrice Prediction using Random forest Classifier ")
 def load_file(filepath):
     st.info("Loading the dataset...")
     df = pd.read_csv(filepath)
-    df.drop('Unnamed: 0',axis=1,inplace = True)
     st.dataframe(df)
     return df
     
@@ -75,21 +74,14 @@ def evaluate_model(model,X_test,y_test):
     st.write("test r2_score is:",score)
     st.success("Model Evaluated Successfully")
     
-def save_model(model):
-    joblib.dump(model,"flight.pkl")
-    st.success("Saved the model Successfully! ....")
-
     
 def main(): 
-    df = load_file('data_1.csv')
+    df = load_file('train.csv')
     X,y = preprocess_data(df)
     X_train,X_test,y_train,y_test = train_test_split(X,y,test_size =0.3,random_state = 58)
-    train_df = X_train.copy()
-    train_df['target'] = y_train
-    train_df.to_csv('train.csv',index=False)
     model = hyper_tuning(X_train,y_train)
     evaluate_model(model,X_test,y_test)
-    save_model(model)
+
     
 if __name__ == '__main__':
     main()
