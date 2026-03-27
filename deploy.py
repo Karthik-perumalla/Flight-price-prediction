@@ -74,13 +74,19 @@ def evaluate_model(model,X_test,y_test):
     st.write("test r2_score is:",score)
     st.success("Model Evaluated Successfully")
     
+
+def save_model(model):
+    joblib.dump(model,"model.pkl")
+    st.success("Saved the model Successfully! ....")
+    
     
 def main(): 
-    df = load_file('train.csv')
+    df = load_file('df_test.csv')
     X,y = preprocess_data(df)
     X_train,X_test,y_train,y_test = train_test_split(X,y,test_size =0.3,random_state = 58)
     model = hyper_tuning(X_train,y_train)
     evaluate_model(model,X_test,y_test)
+    save_model(model)
 
     
 if __name__ == '__main__':
