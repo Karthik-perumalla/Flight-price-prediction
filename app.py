@@ -1,4 +1,4 @@
-# Flight Price Prediction (ElasticNet - Deployment Ready)
+# Flight Price Prediction 
 
 import pandas as pd
 import numpy as np
@@ -7,15 +7,14 @@ import streamlit as st
 
 st.title("✈️ Flight Price Prediction using Linear Models")
 
-# ================= LOAD MODEL =================
+
 @st.cache_resource
 def load_model():
-    return joblib.load("model.joblib")
+    return joblib.load("best_model.joblib")
 
 model = load_model()
 st.success("Model loaded successfully!")
 
-# ================= INPUT UI =================
 
 airline = st.selectbox("Airline", ["Indigo","Air India","Vistara","SpiceJet","GoAir"])
 source_city = st.selectbox("Source City", ["Delhi","Mumbai","Bangalore","Kolkata","Chennai"])
@@ -28,7 +27,7 @@ travel_class = st.selectbox("Class", ["Economy","Business"])
 duration = st.number_input("Duration (hours)", min_value=0.0)
 days_left = st.number_input("Days Left", min_value=0)
 
-# ================= PREPROCESS INPUT =================
+
 
 def preprocess_input():
     input_dict = {
@@ -57,13 +56,13 @@ def preprocess_input():
 
     return X
 
-# ================= PREDICTION =================
+
 
 if st.button("Predict Price"):
     try:
         X = preprocess_input()
 
-        # 🔥 IMPORTANT: match training columns
+       
         model_features = model.feature_names_in_
 
         for col in model_features:

@@ -1,95 +1,146 @@
-# Flight Price Prediction using Random forest Classifier
-
 import pandas as pd
-import numpy as np
-import joblib
 import streamlit as st
+import joblib
 
-from sklearn.model_selection import train_test_split,RandomizedSearchCV
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.pipeline import Pipeline
 from sklearn.metrics import r2_score
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.linear_model import Ridge, Lasso
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
 
-st.title("FlightPrice Prediction using Random forest Classifier ")
+
+st.title("Flight Price Prediction using Machine Learning")
+
+
+
 def load_file(filepath):
-    st.info("Loading the dataset...")
     df = pd.read_csv(filepath)
-    df.drop('Unnamed: 0',axis=1,inplace = True)
     st.dataframe(df)
     return df
-    
+
+
+
 def preprocess_data(df):
-    st.info("Preprocessing the data.......")
-    categorical_features = [
-        'airline',
-        'source_city',
-        'departure_time',
-        'stops',
-        'arrival_time',
-        'destination_city',
-        'class'
-    ]
-    encoded_df = pd.get_dummies(
-        df[categorical_features],
-        drop_first=True,
-        dtype=int
-    )
-    numerical_features = df[['duration', 'days_left']]
-    
-    X = pd.concat([encoded_df,numerical_features],axis =1)
-    y = df['price']
-    st.write(X)
-    st.write(y)
-    return X,y
-    
-def hyper_tuning(X_train,y_train):
-    st.write("Running hyperparameter tuning....")
-    
-    model = RandomForestRegressor(n_estimators = 60,random_state = 42)
+    df = df.drop(columns="flight")
+    X = df.drop(columns="price")
+    y = df["price"]
+    return X, y
 
-    param_dist = {
-    "n_estimators" : [50,100,200],
-    "max_depth":[5,10,15,20],
-    "max_features":['sqrt','log2',0.5]
+
+
+def model_pipeline(X, model):
+
+    cat_cols = X.select_dtypes(include="object").columns.to_list()
+    num_cols = X.select_dtypes(include="number").columns.to_list()
+
+    preprocessor = ColumnTransformer([
+        ("num", StandardScaler(), num_cols),
+        ("cat", OneHotEncoder(handle_unknown="ignore"), cat_cols)
+    ])
+
+    pipeline = Pipeline([
+        ("preprocessor", preprocessor),
+        ("model", model)
+    ])
+
+    return pipeline
+
+
+def select_model(X_train, y_train, X_test, y_test):
+
+    models = {
+        "Ridge": Ridge(),
+        "Lasso": Lasso(),
     }
-    search = RandomizedSearchCV(model,
-    param_distributions = param_dist,
-    n_iter = 10,
-    cv = 3,
-    scoring = 'r2',
-    random_state = 42,
-    n_jobs = -1
-    )
-    
-    search.fit(X_train,y_train)
-    st.info("trained model successfully")
-    
-    print("Best params:",search.best_params_)
-    print("Best cv score:",search.best_score_)
-    
-    return search.best_estimator_
-    
-def evaluate_model(model,X_test,y_test):
-    st.success("Evaluating the model.......")
-    y_pred = model.predict(X_test)
-    score = r2_score(y_test,y_pred)
-    st.write("test r2_score is:",score)
-    st.success("Model Evaluated Successfully")
-    
-def save_model(model):
-    joblib.dump(model,"flight.pkl")
-    st.success("Saved the model Successfully! ....")
+
+    results = []
+    best_model = None
+    best_score = -float("inf")
+
+    for name, model in models.items():
+
+        st.write(f"Running {name}...")
+
+        pipeline = model_pipeline(X_train, model)
+
+      
+        if name == "Ridge":
+            param_dist = {
+                'model__alpha': [0.1, 1, 10]
+            }
+
+        elif name == "Lasso":
+            param_dist = {
+                'model__alpha': [0.01, 0.1],
+                'model__max_iter': [1000]
+            }
+
+
+        search = RandomizedSearchCV(
+            pipeline,
+            param_distributions=param_dist,
+            n_iter=2,   
+            cv=2,
+            scoring='r2',
+            n_jobs=-1,
+            random_state=42
+        )
+
+        search.fit(X_train, y_train)
+
+        y_pred = search.predict(X_test)
+        score = r2_score(y_test, y_pred)
+
+       
+        if score > best_score:
+            best_score = score
+            best_model = search.best_estimator_
+
+        results.append({
+            "Model": name,
+            "R2 Score": score,
+            "Best Params": search.best_params_
+        })
+
+    results_df = pd.DataFrame(results).sort_values(by="R2 Score", ascending=False)
+
+    return results_df, best_model
+
+
+
+def train_best_model(best_model, X_train, X_test, y_train, y_test):
+
+    best_model.fit(X_train, y_train)
+
+    y_pred = best_model.predict(X_test)  
+
+    st.subheader("Best Model Performance")
+    st.write("R2 Score:", r2_score(y_test, y_pred))
 
     
-def main(): 
-    df = load_file('data_1.csv')
-    X,y = preprocess_data(df)
-    X_train,X_test,y_train,y_test = train_test_split(X,y,test_size =0.3,random_state = 58)
-    train_df = X_train.copy()
-    train_df['target'] = y_train
-    train_df.to_csv('train.csv',index=False)
-    model = hyper_tuning(X_train,y_train)
-    evaluate_model(model,X_test,y_test)
-    save_model(model)
-    
-if __name__ == '__main__':
+    joblib.dump(best_model, "best_model.joblib")
+    st.success("Model saved as best_model.joblib")
+
+
+
+def main():
+
+    df = load_file("processed.csv")
+
+    X, y = preprocess_data(df)
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
+    results, best_model = select_model(X_train, y_train, X_test, y_test)
+
+    st.subheader("Model Comparison")
+    st.dataframe(results)
+
+    train_best_model(best_model, X_train, X_test, y_train, y_test)
+
+
+if __name__ == "__main__":
     main()
