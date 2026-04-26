@@ -43,33 +43,11 @@ def preprocess_input():
     }
 
     df = pd.DataFrame([input_dict])
-
-    categorical_features = [
-        'airline','source_city','departure_time',
-        'stops','arrival_time','destination_city','class'
-    ]
-
-    encoded_df = pd.get_dummies(df[categorical_features], drop_first=True)
-    numerical_features = df[['duration','days_left']]
-
-    X = pd.concat([encoded_df, numerical_features], axis=1)
-
-    return X
-
-
-
+    return df
+   
 if st.button("Predict Price"):
     try:
         X = preprocess_input()
-
-       
-        model_features = model.feature_names_in_
-
-        for col in model_features:
-            if col not in X.columns:
-                X[col] = 0
-
-        X = X[model_features]
 
         prediction = model.predict(X)[0]
 
