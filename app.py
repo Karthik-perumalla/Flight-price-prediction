@@ -4,6 +4,37 @@ import pandas as pd
 import numpy as np
 import joblib
 import streamlit as st
+import base64
+
+
+
+def set_bg():
+    with open("background.jpeg", "rb") as img_file:
+        encoded = base64.b64encode(img_file.read()).decode()
+
+    bg_style = f"""
+    <style>
+    .stApp {{
+        background-image: url("data:image/jpeg;base64,{encoded}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }}
+
+    /* Optional: make content slightly transparent for better readability */
+    .block-container {{
+        background: rgba(255, 255, 255, 0.85);
+        padding: 20px;
+        border-radius: 10px;
+    }}
+    </style>
+    """
+    st.markdown(bg_style, unsafe_allow_html=True)
+
+
+set_bg()
+
+
 
 st.title("✈️ Flight Price Prediction using Linear Models")
 
@@ -28,7 +59,6 @@ duration = st.number_input("Duration (hours)", min_value=0.0)
 days_left = st.number_input("Days Left", min_value=0)
 
 
-
 def preprocess_input():
     input_dict = {
         'airline': airline,
@@ -45,12 +75,11 @@ def preprocess_input():
     df = pd.DataFrame([input_dict])
     return df
    
+
 if st.button("Predict Price"):
     try:
         X = preprocess_input()
-
         prediction = model.predict(X)[0]
-
         st.success(f"💰 Predicted Price: ₹ {int(prediction)}")
 
     except Exception as e:
