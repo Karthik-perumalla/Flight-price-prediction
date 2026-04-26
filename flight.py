@@ -1,7 +1,6 @@
 import pandas as pd
 import streamlit as st
 import joblib
-
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import r2_score
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
@@ -33,16 +32,17 @@ def model_pipeline(X, model):
 
     cat_cols = X.select_dtypes(include="object").columns.to_list()
     num_cols = X.select_dtypes(include="number").columns.to_list()
-
+    from joblib import Memory
+    memory = Memory(location="cache_dir",verbose=0)
     preprocessor = ColumnTransformer([
         ("num", StandardScaler(), num_cols),
-        ("cat", OneHotEncoder(handle_unknown="ignore"), cat_cols)
+        ("cat", OneHotEncoder(handle_unknown="ignore",sparse_output=False), cat_cols)
     ])
 
     pipeline = Pipeline([
         ("preprocessor", preprocessor),
         ("model", model)
-    ])
+    ],memory = memory)
 
     return pipeline
 
@@ -80,8 +80,8 @@ def select_model(X_train, y_train, X_test, y_test):
         search = RandomizedSearchCV(
             pipeline,
             param_distributions=param_dist,
-            n_iter=2,   
-            cv=2,
+            n_iter=5,   
+            cv=3,
             scoring='r2',
             n_jobs=-1,
             random_state=42
@@ -110,8 +110,6 @@ def select_model(X_train, y_train, X_test, y_test):
 
 
 def train_best_model(best_model, X_train, X_test, y_train, y_test):
-
-    best_model.fit(X_train, y_train)
 
     y_pred = best_model.predict(X_test)  
 
