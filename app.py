@@ -80,7 +80,7 @@ if st.button("Predict Price"):
     try:
         X = preprocess_input()
         prediction = model.predict(X)[0]
-        st.success(f"💰 Predicted Price: ₹ {int(prediction)}")
+        st.success(f" Predicted Price: ₹ {int(prediction)}")
 
     except Exception as e:
         st.error(f"Error: {e}")
