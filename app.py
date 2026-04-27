@@ -36,7 +36,7 @@ set_bg()
 
 
 
-st.title("✈️ Flight Price Prediction using Linear Models")
+st.title(" Flight Price Prediction using Linear Models")
 
 
 @st.cache_resource
